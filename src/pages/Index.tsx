@@ -255,7 +255,7 @@ const Index = () => {
                     variant="warning"
                   />
                   <KPICard
-                    title="Evasão / Trancamentos"
+                    title="Evasão Total"
                     value={kpiData?.evasaoCount.toLocaleString('pt-BR') || '0'}
                     icon={UserX}
                     trend={kpiData?.evasaoRate || 0}
