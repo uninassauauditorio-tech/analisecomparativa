@@ -38,9 +38,18 @@ const Header = ({ isDataLoaded, filialName = "UNINASSAU", onFileUpdate, isUpdati
   const [isAddUnitOpen, setIsAddUnitOpen] = useState(false);
 
   const fetchUnidades = useCallback(async () => {
-    const { data } = await supabase.from('unidades').select('*').order('nome');
+    if (!profile) return;
+
+    let query = supabase.from('unidades').select('*').order('nome');
+
+    // Se não for admin, filtra apenas a unidade vinculada ao perfil
+    if (profile.role !== 'admin' && profile.unidade_id) {
+      query = query.eq('id', profile.unidade_id);
+    }
+
+    const { data } = await query;
     if (data) setUserUnidades(data);
-  }, []);
+  }, [profile]);
 
   useEffect(() => {
     fetchUnidades();

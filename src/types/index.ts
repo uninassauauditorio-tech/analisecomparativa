@@ -83,9 +83,10 @@ export interface Profile {
   last_name: string | null;
   avatar_url: string | null;
   theme: string | null;
-  role: 'admin' | 'user';
-  unidades_ids?: string[]; // IDs das unidades que o usuário tem acesso
-  current_unidade_id?: string | null; // Unidade atualmente selecionada
+  role: 'admin' | 'user' | string;
+  unidade_id?: string | null; // ID da unidade primária (diretamente do DB)
+  unidades_ids?: string[]; // IDs das unidades que o usuário tem acesso (para regional/multi-unidade)
+  current_unidade_id?: string | null; // Unidade atualmente selecionada na sessão
 }
 
 export interface MetaCurso {
