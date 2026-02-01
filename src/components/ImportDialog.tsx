@@ -77,9 +77,15 @@ const ImportDialog = ({ isOpen, onOpenChange, onSuccess }: ImportDialogProps) =>
 
             toast.loading("Preparando registros para envio...", { id: toastId });
 
-            // 3. Mapear e Limpar dados
+            // 3. Normalizar chaves e mapear registros
             const BATCH_SIZE = 1000;
-            const records = jsonData.map(row => {
+            const records = jsonData.map(oldRow => {
+                // Normaliza todas as chaves da linha para UPPERCASE e sems espaços
+                const row: any = {};
+                Object.keys(oldRow).forEach(key => {
+                    row[key.toUpperCase().trim()] = oldRow[key];
+                });
+
                 const clean = (val: any) => {
                     if (val === null || val === undefined) return "";
                     return String(val).trim();
@@ -87,48 +93,53 @@ const ImportDialog = ({ isOpen, onOpenChange, onSuccess }: ImportDialogProps) =>
 
                 // Normalização de data (DD/MM/YYYY)
                 let dt_formatted = "";
-                const dt_raw = row['DTMATRICULA'] || row['dtmatricula'];
+                const dt_raw = row['DTMATRICULA'];
                 if (dt_raw instanceof Date) {
                     dt_formatted = dt_raw.toLocaleDateString('pt-BR');
                 } else if (dt_raw) {
-                    // Tenta parsear string se não for objeto Date
                     try {
-                        const d = new Date(dt_raw);
-                        if (!isNaN(d.getTime())) dt_formatted = d.toLocaleDateString('pt-BR');
+                        // Se for número serial do Excel
+                        if (typeof dt_raw === 'number') {
+                            const date = new Date((dt_raw - 25569) * 86400 * 1000);
+                            dt_formatted = date.toLocaleDateString('pt-BR');
+                        } else {
+                            const d = new Date(dt_raw);
+                            if (!isNaN(d.getTime())) dt_formatted = d.toLocaleDateString('pt-BR');
+                        }
                     } catch (e) { }
                 }
 
                 return {
                     unidade_id: selectedUnidadeId,
-                    ra: clean(row['RA'] || row['ra']),
-                    semestre: clean(row['SEMESTRE'] || row['semestre']),
-                    aluno: clean(row['ALUNO'] || row['aluno']),
-                    curso: clean(row['CURSO'] || row['curso']),
-                    status: clean(row['STATUS'] || row['status']),
-                    modalidade: clean(row['MODALIDADE'] || row['modalidade'] || 'PRESENCIAL'),
-                    codcoligada: clean(row['CODCOLIGADA'] || row['codcoligada']),
-                    cp_filial: clean(row['CODFILIAL'] || row['codfilial']),
-                    filial: clean(row['FILIAL'] || row['filial']),
-                    habilitacao: clean(row['HABILITACAO'] || row['habilitacao']),
-                    cpf: clean(row['CPF'] || row['cpf']),
-                    email: clean(row['EMAIL'] || row['email']),
-                    cep: clean(row['CEP'] || row['cep']),
-                    rua: clean(row['RUA'] || row['rua']),
-                    numero: clean(row['NUMERO'] || row['numero']),
-                    bairro: clean(row['BAIRRO'] || row['bairro']),
-                    telefone1: clean(row['TELEFONE1'] || row['telefone1']),
-                    telefone2: clean(row['TELEFONE2'] || row['telefone2']),
+                    ra: clean(row['RA']),
+                    semestre: clean(row['SEMESTRE']),
+                    aluno: clean(row['ALUNO']),
+                    curso: clean(row['CURSO']),
+                    status: clean(row['STATUS']),
+                    modalidade: clean(row['MODALIDADE'] || 'PRESENCIAL'),
+                    codcoligada: clean(row['CODCOLIGADA']),
+                    cp_filial: clean(row['CODFILIAL']),
+                    filial: clean(row['FILIAL']),
+                    habilitacao: clean(row['HABILITACAO']),
+                    cpf: clean(row['CPF']),
+                    email: clean(row['EMAIL']),
+                    cep: clean(row['CEP']),
+                    rua: clean(row['RUA']),
+                    numero: clean(row['NUMERO']),
+                    bairro: clean(row['BAIRRO']),
+                    telefone1: clean(row['TELEFONE1']),
+                    telefone2: clean(row['TELEFONE2']),
                     dtmatricula: dt_formatted,
-                    qtdcaptacao: clean(row['QTDCAPTACAO'] || row['qtdcaptacao']),
-                    tipoingresso: clean(row['TIPOINGRESSO'] || row['tipoingresso']),
-                    turno: clean(row['TURNO'] || row['turno']),
-                    periodo: clean(row['PERIODO'] || row['periodo']),
-                    codturma: clean(row['CODTURMA'] || row['codturma']),
-                    codpolo: clean(row['CODPOLO'] || row['codpolo']),
-                    polo: clean(row['POLO'] || row['polo']),
-                    cidade: clean(row['CIDADE'] || row['cidade']),
+                    qtdcaptacao: clean(row['QTDCAPTACAO']),
+                    tipoingresso: clean(row['TIPOINGRESSO']),
+                    turno: clean(row['TURNO']),
+                    periodo: clean(row['PERIODO']),
+                    codturma: clean(row['CODTURMA']),
+                    codpolo: clean(row['CODPOLO']),
+                    polo: clean(row['POLO']),
+                    cidade: clean(row['CIDADE']),
                 };
-            }).filter(r => r.ra && r.semestre); // Garante que tem RA e Semestre
+            }).filter(r => r.ra && r.semestre);
 
             // 4. Enviar em Lotes
             for (let i = 0; i < records.length; i += BATCH_SIZE) {
