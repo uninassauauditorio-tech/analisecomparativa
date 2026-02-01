@@ -54,31 +54,99 @@ const ImportDialog = ({ isOpen, onOpenChange, onSuccess }: ImportDialogProps) =>
         }
 
         setIsUploading(true);
-        const toastId = toast.loading("Conectando ao Motor Python...");
+        const toastId = toast.loading("Processando planilha localmente...");
 
         try {
-            const formData = new FormData();
-            formData.append('file', file);
+            const XLSX = await import('xlsx');
+            const { deleteRecordsForUnidade } = await import('@/utils/dbProcessor');
 
-            // O motor Python já faz a limpeza da unidade_id antes de inserir
-            const response = await fetch(`/api/import-excel/${selectedUnidadeId}`, {
-                method: 'POST',
-                body: formData,
-            });
+            // 1. Ler o arquivo
+            const data = await file.arrayBuffer();
+            const workbook = XLSX.read(data, { cellDates: true });
+            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet) as any[];
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || "Falha no processamento");
+            if (jsonData.length === 0) {
+                throw new Error("A planilha está vazia.");
             }
 
-            toast.success("Sucesso! O banco de dados está sendo atualizado.", { id: toastId });
+            toast.loading(`Limpando base antiga (${jsonData.length} linhas detectadas)...`, { id: toastId });
+
+            // 2. Limpar base antiga da unidade (Modo Espelho)
+            await deleteRecordsForUnidade(selectedUnidadeId);
+
+            toast.loading("Preparando registros para envio...", { id: toastId });
+
+            // 3. Mapear e Limpar dados
+            const BATCH_SIZE = 1000;
+            const records = jsonData.map(row => {
+                const clean = (val: any) => {
+                    if (val === null || val === undefined) return "";
+                    return String(val).trim();
+                };
+
+                // Normalização de data (DD/MM/YYYY)
+                let dt_formatted = "";
+                const dt_raw = row['DTMATRICULA'] || row['dtmatricula'];
+                if (dt_raw instanceof Date) {
+                    dt_formatted = dt_raw.toLocaleDateString('pt-BR');
+                } else if (dt_raw) {
+                    // Tenta parsear string se não for objeto Date
+                    try {
+                        const d = new Date(dt_raw);
+                        if (!isNaN(d.getTime())) dt_formatted = d.toLocaleDateString('pt-BR');
+                    } catch (e) { }
+                }
+
+                return {
+                    unidade_id: selectedUnidadeId,
+                    ra: clean(row['RA'] || row['ra']),
+                    semestre: clean(row['SEMESTRE'] || row['semestre']),
+                    aluno: clean(row['ALUNO'] || row['aluno']),
+                    curso: clean(row['CURSO'] || row['curso']),
+                    status: clean(row['STATUS'] || row['status']),
+                    modalidade: clean(row['MODALIDADE'] || row['modalidade'] || 'PRESENCIAL'),
+                    codcoligada: clean(row['CODCOLIGADA'] || row['codcoligada']),
+                    cp_filial: clean(row['CODFILIAL'] || row['codfilial']),
+                    filial: clean(row['FILIAL'] || row['filial']),
+                    habilitacao: clean(row['HABILITACAO'] || row['habilitacao']),
+                    cpf: clean(row['CPF'] || row['cpf']),
+                    email: clean(row['EMAIL'] || row['email']),
+                    cep: clean(row['CEP'] || row['cep']),
+                    rua: clean(row['RUA'] || row['rua']),
+                    numero: clean(row['NUMERO'] || row['numero']),
+                    bairro: clean(row['BAIRRO'] || row['bairro']),
+                    telefone1: clean(row['TELEFONE1'] || row['telefone1']),
+                    telefone2: clean(row['TELEFONE2'] || row['telefone2']),
+                    dtmatricula: dt_formatted,
+                    qtdcaptacao: clean(row['QTDCAPTACAO'] || row['qtdcaptacao']),
+                    tipoingresso: clean(row['TIPOINGRESSO'] || row['tipoingresso']),
+                    turno: clean(row['TURNO'] || row['turno']),
+                    periodo: clean(row['PERIODO'] || row['periodo']),
+                    codturma: clean(row['CODTURMA'] || row['codturma']),
+                    codpolo: clean(row['CODPOLO'] || row['codpolo']),
+                    polo: clean(row['POLO'] || row['polo']),
+                    cidade: clean(row['CIDADE'] || row['cidade']),
+                };
+            }).filter(r => r.ra && r.semestre); // Garante que tem RA e Semestre
+
+            // 4. Enviar em Lotes
+            for (let i = 0; i < records.length; i += BATCH_SIZE) {
+                const batch = records.slice(i, i + BATCH_SIZE);
+                toast.loading(`Enviando: ${i} de ${records.length} registros...`, { id: toastId });
+
+                const { error } = await supabase.from('alunos_registros').insert(batch);
+                if (error) throw error;
+            }
+
+            toast.success(`Sucesso! ${records.length} registros importados.`, { id: toastId });
             onSuccess(selectedUnidadeId);
             onOpenChange(false);
             setFile(null);
             setSelectedUnidadeId("");
         } catch (error) {
-            console.error("Erro no upload:", error);
-            toast.error("Erro ao importar: " + (error instanceof Error ? error.message : "Erro desconhecido"), { id: toastId });
+            console.error("Erro na importação local:", error);
+            toast.error("Falha na importação: " + (error instanceof Error ? error.message : "Erro desconhecido"), { id: toastId });
         } finally {
             setIsUploading(false);
         }

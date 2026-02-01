@@ -118,26 +118,7 @@ export interface TemporalComparisonItem {
     student_count: number;
 }
 
-export const fetchTemporalComparison = async (
-    unidadeId: string,
-    currentSemester: string,
-    refDay: number,
-    refMonth: number
-): Promise<TemporalComparisonItem[]> => {
-    const { data, error } = await supabase.rpc('get_temporal_comparison', {
-        p_unidade_id: unidadeId,
-        p_current_semester: currentSemester,
-        p_ref_day: refDay,
-        p_ref_month: refMonth
-    });
-
-    if (error) {
-        console.error("Erro ao buscar comparativo temporal:", error);
-        throw error;
-    }
-
-    return data || [];
-};
+// Função legada removida
 
 export interface MultiDayTemporalComparisonItem {
     ref_day_month: string;
@@ -157,28 +138,42 @@ export const fetchMultiDayTemporalComparison = async (
 ): Promise<MultiDayTemporalComparisonItem[]> => {
     try {
         const semesterClean = currentSemester.replace('.', '');
-        const params = new URLSearchParams({
-            semester: semesterClean,
-            ref_date: refDate,
-            tipo_captacao: filters.tipoCaptacao || 'all',
-            curso: filters.curso || 'all',
-            status: filters.status || 'all',
-            turno: filters.turno || 'all',
-            modalidade: filters.modalidade || 'all'
+
+        // Chamada direta para o Banco de Dados (RPC), sem passar pelo motor Python
+        const { data, error } = await supabase.rpc('get_temporal_comparison_v3', {
+            p_unidade_id: unidadeId,
+            p_semester: semesterClean,
+            p_ref_date: refDate,
+            p_tipo_captacao: filters.tipoCaptacao || 'all',
+            p_curso: filters.curso || 'all',
+            p_status: filters.status || 'all',
+            p_turno: filters.turno || 'all',
+            p_modalidade: filters.modalidade || 'all'
         });
 
-        const response = await fetch(`/api/temporal-comparison/${unidadeId}?${params.toString()}`);
+        if (error) throw error;
 
-        if (!response.ok) {
-            throw new Error(`Python API error: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        return data as MultiDayTemporalComparisonItem[];
+        return (data || []).map((item: any) => ({
+            ref_day_month: item.ref_day_month,
+            weekday_name: item.weekday_name,
+            semester_id: item.semester_id,
+            student_count: parseInt(item.student_count),
+            sort_date: item.sort_date
+        }));
     } catch (error) {
-        console.error("Erro ao buscar comparativo temporal via Python:", error);
+        console.error("Erro ao buscar comparativo temporal via SQL:", error);
         throw error;
     }
+};
+
+// Nova função para deletar registros antes da importação
+export const deleteRecordsForUnidade = async (unidadeId: string) => {
+    const { error } = await supabase
+        .from('alunos_registros')
+        .delete()
+        .eq('unidade_id', unidadeId);
+
+    if (error) throw error;
 };
 
 export const prepareProcessedData = (records: StudentRecord[]): ProcessedData => {

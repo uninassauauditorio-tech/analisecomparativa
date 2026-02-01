@@ -1,6 +1,0 @@
-fastapi
-pandas
-openpyxl
-python-multipart
-httpx
-python-dotenv
