@@ -22,7 +22,7 @@ logging.basicConfig(
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 
-app = FastAPI(title="Motor de Processamento Olinda InsightFlow")
+app = FastAPI(title="Motor de Processamento Olinda InsightFlow", root_path="/api")
 
 # Exporta o app para a Vercel
 main = app
@@ -40,7 +40,7 @@ app.add_middleware(
 async def root():
     return {"status": "online", "message": "Motor Python rodando com sucesso."}
 
-@app.post("/import-excel/{unidade_id}")
+@app.post("/api/import-excel/{unidade_id}")
 async def import_excel(unidade_id: str, file: UploadFile = File(...), background_tasks: BackgroundTasks = BackgroundTasks()):
     if not file.filename.endswith(('.xlsx', '.xls')):
         raise HTTPException(status_code=400, detail="Por favor, envie um arquivo Excel válido (.xlsx ou .xls).")
@@ -161,7 +161,7 @@ async def process_heavy_excel(file_contents: bytes, unidade_id: str):
     except Exception as e:
         logging.error(f"FALHA NO MOTOR PYTHON: {str(e)}", exc_info=True)
 
-@app.get("/temporal-comparison/{unidade_id}")
+@app.get("/api/temporal-comparison/{unidade_id}")
 async def get_temporal_comparison_python(
     unidade_id: str, 
     semester: str,
