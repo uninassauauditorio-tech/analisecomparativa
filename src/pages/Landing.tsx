@@ -19,7 +19,7 @@ const Landing = () => {
 
       <div className="text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="inline-flex items-center justify-center p-2 px-3 mb-6 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold tracking-wider uppercase">
-          Inteligência de Dados Educacionais
+          Olinda InsightFlow
         </div>
         <h1 className="text-5xl font-extrabold tracking-tight text-foreground sm:text-7xl mb-6 bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/70">
           Olinda <span className="text-primary italic">InsightFlow</span>
