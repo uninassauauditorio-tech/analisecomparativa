@@ -285,13 +285,15 @@ const Index = () => {
                   />
                 </section>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className={`grid grid-cols-1 ${filters.modalidade === 'EAD' || filters.modalidade === 'DIGITAL' ? 'lg:grid-cols-1' : 'lg:grid-cols-2'} gap-8`}>
                   <section id="comparativo">
                     <ComparativeChart data={comparativeData} comparisonPeriodLabel={comparisonPeriodLabel} />
                   </section>
-                  <section id="distribuicao-status">
-                    <DistributionChart data={distributionData} />
-                  </section>
+                  {(filters.modalidade !== 'EAD' && filters.modalidade !== 'DIGITAL') && (
+                    <section id="distribuicao-status">
+                      <DistributionChart data={distributionData} />
+                    </section>
+                  )}
                 </div>
 
                 <section id="distribuicao-cursos">
