@@ -139,9 +139,15 @@ export const calculateKPIs = (records: StudentRecord[], defaultSemester: string,
     'ABANDONO',
     'TRANSFERENCIA PARA EAD',
     'TRANSFERENCIA EXTERNA',
-    'TRANSFERENCIA ENTRE UNIDADES'
+    'TRANSFERENCIA INTERNA',
+    'TRANSFERENCIA ENTRE UNIDADES',
+    'EVADIDO',
+    'DESISTENTE'
   ];
-  const evasaoCount = currentRecords.filter(r => evasaoStatuses.includes(r.STATUS)).length;
+  const evasaoCount = currentRecords.filter(r => {
+    const s = String(r.STATUS || '').toUpperCase().trim();
+    return evasaoStatuses.some(status => s.includes(status) || status.includes(s));
+  }).length;
   const evasaoRate = totalStudents > 0 ? (evasaoCount / totalStudents) * 100 : 0;
 
   return {
