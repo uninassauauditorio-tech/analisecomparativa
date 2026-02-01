@@ -8,9 +8,10 @@ interface EvolutionChartProps {
   referenceSemesterLabel?: string;
   referenceCaptacaoData?: number;
   filters: Filters;
+  filialName?: string;
 }
 
-const EvolutionChart = ({ data, referenceData, referenceSemesterLabel, referenceCaptacaoData, filters }: EvolutionChartProps) => {
+const EvolutionChart = ({ data, referenceData, referenceSemesterLabel, referenceCaptacaoData, filters, filialName }: EvolutionChartProps) => {
   const renderBars = () => {
     const labelStyle = { fill: 'hsl(var(--foreground))', fontSize: 11, fontWeight: 'bold' };
     const captacaoLabelStyle = { fill: 'hsl(var(--primary))', fontSize: 11, fontWeight: 'bold' };
@@ -45,7 +46,7 @@ const EvolutionChart = ({ data, referenceData, referenceSemesterLabel, reference
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Evolução de Alunos por Semestre</CardTitle>
+        <CardTitle>Evolução por Semestre {filialName ? `- ${filialName}` : ''}</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>

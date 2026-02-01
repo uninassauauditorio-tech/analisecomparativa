@@ -10,9 +10,10 @@ import { Filters } from "@/types";
 interface TemporalComparisonTableProps {
     currentSemester: string;
     filters: Filters;
+    filialName?: string;
 }
 
-const TemporalComparisonTable = ({ currentSemester, filters }: TemporalComparisonTableProps) => {
+const TemporalComparisonTable = ({ currentSemester, filters, filialName }: TemporalComparisonTableProps) => {
     const { profile } = useAuth();
     const [rawData, setRawData] = useState<MultiDayTemporalComparisonItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -114,7 +115,7 @@ const TemporalComparisonTable = ({ currentSemester, filters }: TemporalCompariso
                 <CardHeader className="bg-[#f0f4fa] py-2 px-4 border-b-2 border-[#a3b1cc]">
                     <CardTitle className="text-[#003366] text-lg font-bold flex items-center justify-between">
                         <span>
-                            Produção Diária de {filters.tipoCaptacao === 'rematricula' ? 'Rematrícula' : filters.tipoCaptacao === 'captacao' ? 'Captação' : 'Matrículas'}
+                            Produção Diária {filialName ? `- ${filialName}` : ''} ({filters.tipoCaptacao === 'rematricula' ? 'Rematrícula' : filters.tipoCaptacao === 'captacao' ? 'Captação' : 'Matrículas'})
                             <span className="font-normal text-sm ml-2 text-[#444]">- {tableData.semesters.slice().reverse().map(formatSemesterLabel).join(' x ')}</span>
                         </span>
                         <span className="text-xs font-normal text-gray-400 italic">(Realizado por Dia • Últimos 15 dias)</span>

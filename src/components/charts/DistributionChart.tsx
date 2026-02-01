@@ -47,7 +47,7 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
   );
 };
 
-const DistributionChart = ({ data }: { data: any[] }) => {
+const DistributionChart = ({ data, filialName }: { data: any[], filialName?: string }) => {
   const [palette, setPalette] = useState<string[]>(generatePaletteFromCSS());
 
   useEffect(() => {
@@ -66,7 +66,7 @@ const DistributionChart = ({ data }: { data: any[] }) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Distribuição por Turno</CardTitle>
+        <CardTitle>Distribuição por Turno {filialName ? `- ${filialName}` : ''}</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={350}>

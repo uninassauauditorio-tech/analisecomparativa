@@ -272,6 +272,7 @@ const Index = () => {
                   <TemporalComparisonTable
                     currentSemester={semesterForAnalysis}
                     filters={filters}
+                    filialName={processedData.filialName}
                   />
                 </section>
 
@@ -282,22 +283,23 @@ const Index = () => {
                     referenceData={referenceData?.value}
                     referenceSemesterLabel={referenceData?.label}
                     referenceCaptacaoData={referenceCaptacaoData?.value}
+                    filialName={processedData.filialName}
                   />
                 </section>
 
                 <div className={`grid grid-cols-1 ${filters.modalidade === 'EAD' || filters.modalidade === 'DIGITAL' ? 'lg:grid-cols-1' : 'lg:grid-cols-2'} gap-8`}>
                   <section id="comparativo">
-                    <ComparativeChart data={comparativeData} comparisonPeriodLabel={comparisonPeriodLabel} />
+                    <ComparativeChart data={comparativeData} comparisonPeriodLabel={comparisonPeriodLabel} filialName={processedData.filialName} />
                   </section>
                   {(filters.modalidade !== 'EAD' && filters.modalidade !== 'DIGITAL') && (
                     <section id="distribuicao-status">
-                      <DistributionChart data={distributionData} />
+                      <DistributionChart data={distributionData} filialName={processedData.filialName} />
                     </section>
                   )}
                 </div>
 
                 <section id="distribuicao-cursos">
-                  <CourseDistributionChart data={courseDistributionData} />
+                  <CourseDistributionChart data={courseDistributionData} filialName={processedData.filialName} />
                 </section>
 
                 {/* 
@@ -314,7 +316,7 @@ const Index = () => {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   <div className="lg:col-span-2">
-                    <PeriodDistributionChart data={periodDistributionData} />
+                    <PeriodDistributionChart data={periodDistributionData} filialName={processedData.filialName} />
                   </div>
                   <div className="lg:col-span-1">
                     <InsightsPanel insights={dynamicInsights} />

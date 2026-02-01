@@ -1,23 +1,23 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LabelList } from 'recharts';
 
-const CourseDistributionChart = ({ data }: { data: any[] }) => {
+const CourseDistributionChart = ({ data, filialName }: { data: any[], filialName?: string }) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Distribuição por Curso</CardTitle>
+        <CardTitle>Distribuição por Curso {filialName ? `- ${filialName}` : ''}</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={data} layout="vertical" margin={{ top: 5, right: 50, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" horizontal={false} />
             <XAxis type="number" />
-            <YAxis 
-              type="category" 
-              dataKey="name" 
-              width={120} 
-              tick={{ fontSize: 12 }} 
-              tickLine={false} 
+            <YAxis
+              type="category"
+              dataKey="name"
+              width={120}
+              tick={{ fontSize: 12 }}
+              tickLine={false}
               axisLine={false}
             />
             <Tooltip

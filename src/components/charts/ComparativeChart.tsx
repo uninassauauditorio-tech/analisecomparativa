@@ -10,13 +10,14 @@ interface ChartData {
 interface ComparativeChartProps {
   data: ChartData[];
   comparisonPeriodLabel: string;
+  filialName?: string;
 }
 
-const ComparativeChart = ({ data, comparisonPeriodLabel }: ComparativeChartProps) => {
+const ComparativeChart = ({ data, comparisonPeriodLabel, filialName }: ComparativeChartProps) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Comparativo Anual</CardTitle>
+        <CardTitle>Comparativo Anual {filialName ? `- ${filialName}` : ''}</CardTitle>
         <CardDescription>
           Comparando o total de alunos para os {comparisonPeriodLabel} ao longo dos anos.
         </CardDescription>
