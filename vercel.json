@@ -12,7 +12,7 @@
     ],
     "functions": {
         "backend/main.py": {
-            "runtime": "python3.10"
+            "runtime": "@vercel/python"
         }
     }
 }
