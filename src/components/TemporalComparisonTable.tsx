@@ -97,7 +97,7 @@ const TemporalComparisonTable = ({ currentSemester, filters, filialName }: Tempo
     if (!tableData || tableData.rows.length === 0) {
         return (
             <Card className="w-full border-dashed border-2 p-8 text-center text-gray-400">
-                Certifique-se de que o motor Python está rodando e que há dados históricos para este período.
+                Aguardando carregamento de dados históricos... se esta unidade for nova, certifique-se de realizar a primeira importação.
             </Card>
         );
     }

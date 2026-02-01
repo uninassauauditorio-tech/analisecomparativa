@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
+import * as XLSX from 'xlsx';
+import { deleteRecordsForUnidade } from '@/utils/dbProcessor';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -57,17 +59,14 @@ const ImportDialog = ({ isOpen, onOpenChange, onSuccess }: ImportDialogProps) =>
         const toastId = toast.loading("Processando planilha localmente...");
 
         try {
-            const XLSX = await import('xlsx');
-            const { deleteRecordsForUnidade } = await import('@/utils/dbProcessor');
-
             // 1. Ler o arquivo
             const data = await file.arrayBuffer();
-            const workbook = XLSX.read(data, { cellDates: true });
+            const workbook = XLSX.read(data, { cellDates: true, type: 'array' });
             const worksheet = workbook.Sheets[workbook.SheetNames[0]];
             const jsonData = XLSX.utils.sheet_to_json(worksheet) as any[];
 
-            if (jsonData.length === 0) {
-                throw new Error("A planilha está vazia.");
+            if (!jsonData || jsonData.length === 0) {
+                throw new Error("A planilha está vazia ou o formato não é suportado.");
             }
 
             toast.loading(`Limpando base antiga (${jsonData.length} linhas detectadas)...`, { id: toastId });
@@ -80,10 +79,11 @@ const ImportDialog = ({ isOpen, onOpenChange, onSuccess }: ImportDialogProps) =>
             // 3. Normalizar chaves e mapear registros
             const BATCH_SIZE = 1000;
             const records = jsonData.map(oldRow => {
-                // Normaliza todas as chaves da linha para UPPERCASE e sems espaços
+                // Normaliza todas as chaves da linha para UPPERCASE e sem espaços
                 const row: any = {};
                 Object.keys(oldRow).forEach(key => {
-                    row[key.toUpperCase().trim()] = oldRow[key];
+                    const normalizedKey = key.toString().toUpperCase().trim();
+                    row[normalizedKey] = oldRow[key];
                 });
 
                 const clean = (val: any) => {
@@ -94,28 +94,39 @@ const ImportDialog = ({ isOpen, onOpenChange, onSuccess }: ImportDialogProps) =>
                 // Normalização de data (DD/MM/YYYY)
                 let dt_formatted = "";
                 const dt_raw = row['DTMATRICULA'];
-                if (dt_raw instanceof Date) {
-                    dt_formatted = dt_raw.toLocaleDateString('pt-BR');
-                } else if (dt_raw) {
+
+                if (dt_raw) {
                     try {
-                        // Se for número serial do Excel
-                        if (typeof dt_raw === 'number') {
-                            const date = new Date((dt_raw - 25569) * 86400 * 1000);
-                            dt_formatted = date.toLocaleDateString('pt-BR');
+                        if (dt_raw instanceof Date) {
+                            dt_formatted = `${String(dt_raw.getDate()).padStart(2, '0')}/${String(dt_raw.getMonth() + 1).padStart(2, '0')}/${dt_raw.getFullYear()}`;
+                        } else if (typeof dt_raw === 'number') {
+                            // Se for número serial do Excel
+                            const date = new Date((dt_raw - 1) * 24 * 60 * 60 * 1000 + Date.UTC(1899, 11, 31));
+                            dt_formatted = `${String(date.getUTCDate()).padStart(2, '0')}/${String(date.getUTCMonth() + 1).padStart(2, '0')}/${date.getUTCFullYear()}`;
                         } else {
-                            const d = new Date(dt_raw);
-                            if (!isNaN(d.getTime())) dt_formatted = d.toLocaleDateString('pt-BR');
+                            // Tenta parsear string DD/MM/YYYY ou YYYY-MM-DD
+                            const strDate = String(dt_raw);
+                            if (strDate.includes('/')) {
+                                dt_formatted = strDate; // Assume já estar formatado
+                            } else {
+                                const d = new Date(strDate);
+                                if (!isNaN(d.getTime())) {
+                                    dt_formatted = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+                                }
+                            }
                         }
-                    } catch (e) { }
+                    } catch (e) {
+                        console.warn("Erro ao processar data:", dt_raw);
+                    }
                 }
 
                 return {
                     unidade_id: selectedUnidadeId,
-                    ra: clean(row['RA']),
-                    semestre: clean(row['SEMESTRE']),
-                    aluno: clean(row['ALUNO']),
-                    curso: clean(row['CURSO']),
-                    status: clean(row['STATUS']),
+                    ra: clean(row['RA'] || row['MATRICULA'] || row['CODMATRICULA']),
+                    semestre: clean(row['SEMESTRE'] || row['CODPERIODO']),
+                    aluno: clean(row['ALUNO'] || row['NOME'] || row['NOMEALUNO']),
+                    curso: clean(row['CURSO'] || row['NOMECURSO']),
+                    status: clean(row['STATUS'] || row['DESCSTATUS']),
                     modalidade: clean(row['MODALIDADE'] || 'PRESENCIAL'),
                     codcoligada: clean(row['CODCOLIGADA']),
                     cp_filial: clean(row['CODFILIAL']),
