@@ -11,6 +11,8 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { DataProvider } from "./contexts/DataContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 
+import { ptBR } from "@clerk/localizations";
+
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 if (!PUBLISHABLE_KEY) {
@@ -19,7 +21,11 @@ if (!PUBLISHABLE_KEY) {
 
 function App() {
   return (
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY || ""} afterSignOutUrl="/">
+    <ClerkProvider
+      publishableKey={PUBLISHABLE_KEY || ""}
+      afterSignOutUrl="/"
+      localization={ptBR}
+    >
       <BrowserRouter>
         <AuthProvider>
           <ThemeProvider>
