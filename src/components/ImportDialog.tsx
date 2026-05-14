@@ -69,14 +69,23 @@ const ImportDialog = ({ isOpen, onOpenChange, onSuccess }: ImportDialogProps) =>
                 throw new Error("A planilha está vazia ou o formato não é suportado.");
             }
 
-            toast.loading(`Limpando base antiga (${jsonData.length} linhas detectadas)...`, { id: toastId });
+            // 2. VALIDAR COLUNAS OBRIGATÓRIAS (antes de apagar qualquer coisa!)
+            toast.loading("Validando colunas da planilha...", { id: toastId });
+            const REQUIRED_COLUMNS = ['RA', 'SEMESTRE', 'STATUS', 'CURSO', 'MODALIDADE', 'TURNO', 'DTMATRICULA', 'QTDCAPTACAO', 'PERIODO', 'FILIAL'];
+            
+            const sampleRow = jsonData[0];
+            const existingColumns = Object.keys(sampleRow).map(k => k.toString().toUpperCase().trim());
+            const missingColumns = REQUIRED_COLUMNS.filter(col => !existingColumns.includes(col));
 
-            // 2. Limpar base antiga da unidade (Modo Espelho)
-            await deleteRecordsForUnidade(selectedUnidadeId);
+            if (missingColumns.length > 0) {
+                throw new Error(
+                    `Colunas obrigatórias não encontradas na planilha:\n\n❌ ${missingColumns.join('\n❌ ')}\n\nRenomeie os cabeçalhos da planilha e tente novamente.\n\nColunas esperadas: ${REQUIRED_COLUMNS.join(', ')}`
+                );
+            }
 
+            // 3. Preparar registros ANTES de apagar (para garantir que há dados válidos)
             toast.loading("Preparando registros para envio...", { id: toastId });
 
-            // 3. Normalizar chaves e mapear registros
             const BATCH_SIZE = 1000;
             const records = jsonData.map(oldRow => {
                 // Normaliza todas as chaves da linha para UPPERCASE e sem espaços
@@ -152,7 +161,18 @@ const ImportDialog = ({ isOpen, onOpenChange, onSuccess }: ImportDialogProps) =>
                 };
             }).filter(r => r.ra && r.semestre);
 
-            // 4. Enviar em Lotes
+            // 4. Validar que existem registros processados ANTES de apagar
+            if (records.length === 0) {
+                throw new Error(
+                    "Nenhum registro válido encontrado na planilha. Verifique se as colunas RA e SEMESTRE possuem dados preenchidos."
+                );
+            }
+
+            // 5. AGORA SIM apagar base antiga (só depois de confirmar que os novos dados são válidos)
+            toast.loading(`Limpando base antiga (${records.length} registros novos prontos)...`, { id: toastId });
+            await deleteRecordsForUnidade(selectedUnidadeId);
+
+            // 6. Enviar em Lotes
             for (let i = 0; i < records.length; i += BATCH_SIZE) {
                 const batch = records.slice(i, i + BATCH_SIZE);
                 toast.loading(`Enviando: ${i} de ${records.length} registros...`, { id: toastId });
