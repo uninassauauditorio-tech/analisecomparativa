@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Filters } from "@/types";
-import { SlidersHorizontal, RotateCcw } from "lucide-react";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { SlidersHorizontal, RotateCcw, ChevronDown } from "lucide-react";
 
 interface TopFiltersProps {
     onFilterChange: (newFilters: Partial<Filters>) => void;
@@ -26,6 +28,7 @@ const TopFilters = ({
     modalidades,
     currentFilters
 }: TopFiltersProps) => {
+    const [statusSearch, setStatusSearch] = useState("");
     const hasActiveFilters = Object.values(currentFilters).some(value => value && value !== 'all' && value !== 'PRESENCIAL' && value !== 'MATRICULADO');
 
     return (
@@ -89,17 +92,92 @@ const TopFilters = ({
                         </div>
 
                         {/* Status */}
-                        <div className="flex flex-col gap-1 min-w-[140px]">
+                        <div className="flex flex-col gap-1 min-w-[160px]">
                             <Label className="text-[10px] uppercase text-[#003366] font-bold opacity-70">Status</Label>
-                            <Select onValueChange={(value) => onFilterChange({ status: value })} value={currentFilters.status || 'all'}>
-                                <SelectTrigger className="h-9 transition-all hover:border-[#003366] border-[#a3b1cc]">
-                                    <SelectValue placeholder="Status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">Todos os Status</SelectItem>
-                                    {statuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button variant="outline" className="h-9 justify-between text-left font-normal border-[#a3b1cc] hover:border-[#003366] transition-all w-full bg-white select-none">
+                                        <span className="truncate max-w-[130px] text-gray-800 font-medium">
+                                            {currentFilters.status === 'all' || !currentFilters.status 
+                                                ? 'Todos os Status' 
+                                                : currentFilters.status.split(',').length === 1 
+                                                    ? currentFilters.status 
+                                                    : `${currentFilters.status.split(',').length} selecionados`}
+                                        </span>
+                                        <ChevronDown className="h-4 w-4 opacity-50 shrink-0 ml-2" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-64 p-2 bg-white border border-[#a3b1cc] shadow-xl rounded-lg" align="start">
+                                    <div className="space-y-2">
+                                        {/* Campo de Pesquisa */}
+                                        <div className="px-1 py-1">
+                                            <input 
+                                                type="text" 
+                                                placeholder="Pesquisar..." 
+                                                value={statusSearch}
+                                                onChange={(e) => setStatusSearch(e.target.value)}
+                                                className="w-full h-8 px-2 text-xs border border-[#a3b1cc] rounded focus:outline-none focus:ring-1 focus:ring-[#003366] focus:border-[#003366]"
+                                            />
+                                        </div>
+
+                                        {/* Opção Todos */}
+                                        <label className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-slate-100 cursor-pointer text-sm font-medium select-none text-gray-700">
+                                            <input 
+                                                type="checkbox" 
+                                                checked={currentFilters.status === 'all' || !currentFilters.status}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        onFilterChange({ status: 'all' });
+                                                    }
+                                                }}
+                                                className="h-4 w-4 rounded border-[#a3b1cc] text-[#003366] focus:ring-[#003366]"
+                                            />
+                                            <span>(Tudo)</span>
+                                        </label>
+                                        <div className="h-px bg-slate-200 my-1" />
+
+                                        {/* Lista de Status */}
+                                        <div className="max-h-48 overflow-y-auto space-y-0.5 px-1">
+                                            {statuses.filter(s => s.toLowerCase().includes(statusSearch.toLowerCase())).map(s => {
+                                                const selectedList = (currentFilters.status && currentFilters.status !== 'all') 
+                                                    ? currentFilters.status.split(',') 
+                                                    : statuses; // Se 'all', todos estão marcados
+                                                const isChecked = selectedList.includes(s);
+
+                                                return (
+                                                    <label key={s} className="flex items-center gap-2 px-1 py-1 rounded hover:bg-slate-100 cursor-pointer text-xs font-semibold select-none text-gray-800">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            checked={isChecked}
+                                                            onChange={(e) => {
+                                                                let newList: string[];
+                                                                if (e.target.checked) {
+                                                                    newList = [...selectedList, s];
+                                                                } else {
+                                                                    newList = selectedList.filter(item => item !== s);
+                                                                }
+
+                                                                if (newList.length === 0 || newList.length === statuses.length) {
+                                                                    onFilterChange({ status: 'all' });
+                                                                } else {
+                                                                    onFilterChange({ status: newList.join(',') });
+                                                                }
+                                                            }}
+                                                            className="h-4 w-4 rounded border-[#a3b1cc] text-[#003366] focus:ring-[#003366]"
+                                                        />
+                                                        <span className="truncate">{s}</span>
+                                                    </label>
+                                                );
+                                            })}
+                                            {statuses.filter(s => s.toLowerCase().includes(statusSearch.toLowerCase())).length === 0 && (
+                                                <div className="text-center text-xs text-muted-foreground py-2">
+                                                    Nenhum status encontrado.
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
                         </div>
 
                         {/* Turno */}

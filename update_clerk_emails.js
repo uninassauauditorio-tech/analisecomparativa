@@ -6,7 +6,7 @@ const templates = [
     {
         slug: 'verification_code',
         name: 'Verification code',
-        subject: '{{otp_code}} é o seu código de verificação para Olinda InsightFlow',
+        subject: '{{otp_code}} é o seu código de verificação para Análises UNINASSAU',
         body: `<!DOCTYPE html>
 <html>
 <head>
@@ -25,14 +25,14 @@ const templates = [
     <div class="card">
       <div class="title">Verifique seu acesso</div>
       <p class="text">Olá!</p>
-      <p class="text">Para concluir seu login ou cadastro no <strong>Olinda InsightFlow</strong>, utilize o código de segurança abaixo:</p>
+      <p class="text">Para concluir seu login ou cadastro no <strong>Análises UNINASSAU</strong>, utilize o código de segurança abaixo:</p>
       <div class="code-container">
         <h1 class="code">{{otp_code}}</h1>
       </div>
       <p class="text">Este código expira em breve. Se você não solicitou este acesso, pode ignorar este e-mail com segurança.</p>
     </div>
     <div class="footer">
-      © 2026 UNINASSAU - Olinda InsightFlow<br>
+      © 2026 UNINASSAU - Análises UNINASSAU<br>
       Sistema de Inteligência e Captação
     </div>
   </div>
@@ -42,7 +42,7 @@ const templates = [
     {
         slug: 'invitation',
         name: 'Invitation',
-        subject: 'Você foi convidado para o Olinda InsightFlow',
+        subject: 'Você foi convidado para o Análises UNINASSAU',
         body: `<!DOCTYPE html>
 <html>
 <head>
@@ -61,14 +61,14 @@ const templates = [
     <div class="card">
       <div class="title">Bem-vindo ao Time!</div>
       <p class="text">Olá!</p>
-      <p class="text">Você acaba de ser convidado para acessar o painel de inteligência <strong>Olinda InsightFlow</strong>.</p>
+      <p class="text">Você acaba de ser convidado para acessar o painel de inteligência <strong>Análises UNINASSAU</strong>.</p>
       <p class="text">Clique no botão abaixo para ativar sua conta e começar:</p>
       <div class="btn-container">
         <a href="{{action_url}}" class="button">Aceitar Convite</a>
       </div>
     </div>
     <div class="footer">
-      © 2026 UNINASSAU - Olinda InsightFlow
+      © 2026 UNINASSAU - Análises UNINASSAU
     </div>
   </div>
 </body>

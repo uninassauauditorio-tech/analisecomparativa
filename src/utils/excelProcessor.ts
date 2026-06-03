@@ -1,6 +1,7 @@
 import * as XLSX from 'xlsx';
 import { StudentRecord, ProcessedData, Filters, CalculatedKPIData, DynamicInsight } from '@/types';
 import { normalizeData } from './dataNormalizer';
+import { MultiDayTemporalComparisonItem } from './dbProcessor';
 
 // Função auxiliar para converter a data do Excel (que pode ser um número de série) para um formato legível
 const convertExcelDate = (excelDate: any): string => {
@@ -21,22 +22,26 @@ export const processExcelFile = async (file: File): Promise<ProcessedData> => {
     reader.onload = (e) => {
       try {
         const data = e.target?.result;
-        const workbook = XLSX.read(data, { type: 'binary' });
+        // Usa 'array' (ArrayBuffer) em vez de 'binary' para suportar arquivos grandes corretamente
+        const workbook = XLSX.read(data, { type: 'array' });
 
-        const sheetName = workbook.SheetNames.find(name =>
-          name.toUpperCase().includes('PRESENCIAL')
-        ) || workbook.SheetNames[0];
+        // Lê TODAS as abas e mescla os registros em um único conjunto de dados
+        let allRawData: any[] = [];
+        for (const sheetName of workbook.SheetNames) {
+          const worksheet = workbook.Sheets[sheetName];
+          const sheetData = XLSX.utils.sheet_to_json(worksheet);
+          if (sheetData.length > 0) {
+            allRawData = allRawData.concat(sheetData);
+          }
+        }
 
-        const worksheet = workbook.Sheets[sheetName];
-        const rawJsonData = XLSX.utils.sheet_to_json(worksheet);
-
-        if (rawJsonData.length === 0) {
+        if (allRawData.length === 0) {
           reject(new Error("O arquivo Excel parece estar vazio."));
           return;
         }
 
         // Etapa de Normalização
-        const jsonData = normalizeData(rawJsonData).map(record => ({
+        const jsonData = normalizeData(allRawData).map(record => ({
           ...record,
           DTMATRICULA: record.DTMATRICULA ? convertExcelDate(record.DTMATRICULA) : record.DTMATRICULA
         }));
@@ -81,14 +86,18 @@ export const processExcelFile = async (file: File): Promise<ProcessedData> => {
     };
 
     reader.onerror = () => reject(reader.error);
-    reader.readAsBinaryString(file);
+    // Usa readAsArrayBuffer em vez de readAsBinaryString — mais robusto para arquivos grandes
+    reader.readAsArrayBuffer(file);
   });
 };
 
 export const filterRecords = (records: StudentRecord[], filters: Filters): StudentRecord[] => {
   return records.filter(record => {
     if (filters.curso && filters.curso !== 'all' && record.CURSO !== filters.curso) return false;
-    if (filters.status && filters.status !== 'all' && record.STATUS !== filters.status) return false;
+    if (filters.status && filters.status !== 'all') {
+      const selectedStatuses = filters.status.split(',').map(s => s.trim().toUpperCase());
+      if (selectedStatuses.length > 0 && !selectedStatuses.includes(String(record.STATUS || '').toUpperCase().trim())) return false;
+    }
     if (filters.turno && filters.turno !== 'all' && record.TURNO !== filters.turno) return false;
     if (filters.semestre && filters.semestre !== 'all' && record.SEMESTRE?.toString() !== filters.semestre) return false;
     if (filters.modalidade && filters.modalidade !== 'all' && record.MODALIDADE !== filters.modalidade) return false;
@@ -113,7 +122,13 @@ export const filterRecords = (records: StudentRecord[], filters: Filters): Stude
 };
 
 export const calculateKPIs = (records: StudentRecord[], defaultSemester: string, filters: Filters): CalculatedKPIData => {
-  const semesterForAnalysis = (filters.semestre && filters.semestre !== 'all') ? filters.semestre : defaultSemester;
+  // Prioridade: referenceSemester > semestre filtrado > semestre padrão (mais recente)
+  const semesterForAnalysis =
+    (filters.referenceSemester && filters.referenceSemester !== 'all')
+      ? filters.referenceSemester
+      : (filters.semestre && filters.semestre !== 'all')
+        ? filters.semestre
+        : defaultSemester;
   const currentRecords = filterRecords(records, { ...filters, semestre: semesterForAnalysis });
   const totalStudents = currentRecords.length;
 
@@ -462,3 +477,137 @@ export const getPeriodDistributionData = (records: StudentRecord[], filters: Fil
     .sort((a, b) => a.sortKey - b.sortKey)
     .map(({ name, value }) => ({ name, value }));
 };
+
+const parseDateToISO = (dateVal: any): string | null => {
+  if (!dateVal) return null;
+  const str = String(dateVal).trim();
+  if (!str) return null;
+
+  // Se já for formato YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+    return str.substring(0, 10);
+  }
+
+  // Se for DD/MM/YYYY
+  const partsBr = str.split('/');
+  if (partsBr.length === 3) {
+    const day = partsBr[0].padStart(2, '0');
+    const month = partsBr[1].padStart(2, '0');
+    let year = partsBr[2];
+    if (year.length === 2) year = '20' + year; // fallback
+    return `${year}-${month}-${day}`;
+  }
+
+  // Fallback via Date.parse
+  try {
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+  } catch (e) {}
+
+  return null;
+};
+
+export const getLocalTemporalComparison = (
+  records: StudentRecord[],
+  currentSemester: string,
+  filters: Filters
+): MultiDayTemporalComparisonItem[] => {
+  // 1. Limpamos o semestre dos filtros para podermos analisar múltiplos semestres
+  const filtersWithoutSemester = {
+    ...filters,
+    semestre: undefined,
+    referenceSemester: undefined
+  };
+
+  // 2. Filtramos todos os registros com os demais filtros (curso, turno, modalidade, status)
+  const filteredRecords = filterRecords(records, filtersWithoutSemester);
+
+  // 3. Determinamos as safras/semestres de comparação
+  // Se o semestre atual termina com '1' ou '2', queremos os semestres correspondentes dos anos anteriores
+  const semType = currentSemester.slice(-1);
+  const currentYear = parseInt(currentSemester.substring(0, 4));
+  const targetSemesters = [
+    currentSemester,
+    `${currentYear - 1}${semType}`,
+    `${currentYear - 2}${semType}`,
+    `${currentYear - 3}${semType}`
+  ];
+
+  // 4. Filtramos os registros pertencentes aos semestres de comparação e fazemos o parse das datas
+  const recordsInTargetSemesters = filteredRecords.filter(r => 
+    r.SEMESTRE && targetSemesters.includes(r.SEMESTRE.toString())
+  );
+
+  const parsedRecords = recordsInTargetSemesters.map(r => ({
+    ...r,
+    parsedDate: parseDateToISO(r.DTMATRICULA)
+  })).filter(r => r.parsedDate !== null) as (StudentRecord & { parsedDate: string })[];
+
+  // 5. Encontramos a data de referência no semestre atual
+  const currentSemesterRecords = parsedRecords.filter(r => r.SEMESTRE?.toString() === currentSemester);
+  let refDateStr = '';
+  if (currentSemesterRecords.length > 0) {
+    // Pegamos a maior data de matrícula no semestre atual
+    const dates = currentSemesterRecords.map(r => r.parsedDate);
+    refDateStr = dates.reduce((max, d) => d > max ? d : max, dates[0]);
+  } else {
+    // Se não houver dados no semestre atual, pegamos a maior data do conjunto inteiro, ou hoje
+    const dates = parsedRecords.map(r => r.parsedDate);
+    if (dates.length > 0) {
+      refDateStr = dates.reduce((max, d) => d > max ? d : max, dates[0]);
+    } else {
+      refDateStr = new Date().toISOString().split('T')[0];
+    }
+  }
+
+  // 6. Geramos os últimos 15 dias a partir da data de referência
+  const refDate = new Date(refDateStr + 'T00:00:00');
+  const last15Days: { dateStr: string; monthDay: string; weekday: string }[] = [];
+  const weekdayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+  for (let i = 14; i >= 0; i--) {
+    const d = new Date(refDate.getTime());
+    d.setDate(refDate.getDate() - i);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    
+    last15Days.push({
+      dateStr: `${yyyy}-${mm}-${dd}`,
+      monthDay: `${dd}/${mm}`,
+      weekday: weekdayNames[d.getDay()]
+    });
+  }
+
+  // 7. Agrupamos e contamos os registros por dia equivalente em cada semestre
+  const results: MultiDayTemporalComparisonItem[] = [];
+
+  for (const sem of targetSemesters) {
+    const semYear = sem.substring(0, 4);
+    const semRecords = parsedRecords.filter(r => r.SEMESTRE?.toString() === sem);
+
+    for (const day of last15Days) {
+      // O dia equivalente para este semestre é o mesmo mês/dia, mas com o ano do semestre
+      const [dd, mm] = day.monthDay.split('/');
+      const equivDateStr = `${semYear}-${mm}-${dd}`;
+
+      // Contamos quantos alunos matricularam nesse dia
+      const count = semRecords.filter(r => r.parsedDate === equivDateStr).length;
+
+      results.push({
+        ref_day_month: day.monthDay,
+        weekday_name: day.weekday,
+        semester_id: sem,
+        student_count: count,
+        sort_date: day.dateStr // Para ordenação na tabela, mantemos o dia relativo do ano atual
+      });
+    }
+  }
+
+  return results;
+};

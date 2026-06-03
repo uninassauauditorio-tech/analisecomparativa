@@ -89,8 +89,14 @@ const Header = ({ isDataLoaded, filialName = "UNINASSAU", onFileUpdate, isUpdati
                   clearAnalyticData();
                 }}
               >
-                <SelectTrigger className="h-8 min-w-[150px] bg-transparent border-none shadow-none font-bold text-[#003366] focus:ring-0 hover:bg-primary/5 rounded-md transition-colors">
-                  <SelectValue placeholder="Selecionar Unidade" />
+                <SelectTrigger
+                  className={`h-8 min-w-[160px] border shadow-none font-bold focus:ring-0 rounded-md transition-all ${
+                    profile.current_unidade_id
+                      ? "bg-transparent border-none text-[#003366] hover:bg-primary/5"
+                      : "bg-[#003366]/5 border-[#003366]/30 text-[#003366] animate-pulse hover:animate-none hover:bg-[#003366]/10"
+                  }`}
+                >
+                  <SelectValue placeholder="← Selecionar Unidade" />
                 </SelectTrigger>
                 <SelectContent>
                   {userUnidades.map(u => (

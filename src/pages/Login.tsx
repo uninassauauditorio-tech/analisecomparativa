@@ -111,7 +111,7 @@ const Login = () => {
             <BarChart3 className="h-8 w-8" />
           </div>
           <h1 className="text-4xl font-extrabold tracking-tight text-foreground bg-clip-text text-transparent bg-gradient-to-br from-foreground to-foreground/70">
-            InsightFlow
+            Análises UNINASSAU
           </h1>
           <p className="text-muted-foreground mt-3 text-sm font-medium uppercase tracking-[0.2em] opacity-80">
             Segurança de Dados Acadêmicos

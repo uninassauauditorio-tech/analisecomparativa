@@ -1,9 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useEffect, useState, useMemo } from "react";
-import { fetchMultiDayTemporalComparison, MultiDayTemporalComparisonItem } from "@/utils/dbProcessor";
+import { useMemo } from "react";
+import { MultiDayTemporalComparisonItem } from "@/utils/dbProcessor";
 import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import DailyCaptacaoChart from "./charts/DailyCaptacaoChart";
+import { useData } from "@/contexts/DataContext";
+import { getLocalTemporalComparison } from "@/utils/excelProcessor";
 
 import { Filters } from "@/types";
 
@@ -14,37 +16,12 @@ interface TemporalComparisonTableProps {
 }
 
 const TemporalComparisonTable = ({ currentSemester, filters, filialName }: TemporalComparisonTableProps) => {
-    const { profile } = useAuth();
-    const [rawData, setRawData] = useState<MultiDayTemporalComparisonItem[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { processedData } = useData();
 
-    // Data de referência: Hoje
-    const today = new Date();
-    const refDateStr = today.toISOString().split('T')[0];
-
-    useEffect(() => {
-        const loadData = async () => {
-            if (!profile?.current_unidade_id || !currentSemester) return;
-
-            setLoading(true);
-            try {
-                const result = await fetchMultiDayTemporalComparison(
-                    profile.current_unidade_id,
-                    currentSemester,
-                    refDateStr,
-                    filters
-                );
-                setRawData(result || []);
-            } catch (error) {
-                console.error("Error loading multi-day temporal comparison:", error);
-                setRawData([]);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadData();
-    }, [profile?.current_unidade_id, currentSemester, refDateStr, filters]);
+    const rawData = useMemo(() => {
+        if (!processedData || !currentSemester) return [];
+        return getLocalTemporalComparison(processedData.records, currentSemester, filters);
+    }, [processedData, currentSemester, filters]);
 
     const tableData = useMemo(() => {
         if (!rawData.length) return null;
@@ -86,13 +63,7 @@ const TemporalComparisonTable = ({ currentSemester, filters, filialName }: Tempo
         });
     };
 
-    if (loading) {
-        return (
-            <div className="w-full space-y-4">
-                <Card className="h-96 w-full border-[#a3b1cc] border-2"><CardContent className="p-4"><Skeleton className="h-full w-full" /></CardContent></Card>
-            </div>
-        );
-    }
+
 
     if (!tableData || tableData.rows.length === 0) {
         return (

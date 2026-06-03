@@ -19,10 +19,10 @@ const Landing = () => {
 
       <div className="text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="inline-flex items-center justify-center p-2 px-3 mb-6 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold tracking-wider uppercase">
-          Olinda InsightFlow
+          Análises UNINASSAU
         </div>
         <h1 className="text-5xl font-extrabold tracking-tight text-foreground sm:text-7xl mb-6 bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/70">
-          Olinda <span className="text-primary italic">InsightFlow</span>
+          Análises <span className="text-primary italic">UNINASSAU</span>
         </h1>
         <p className="mt-4 text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
           Transforme dados brutos em decisões estratégicas. Monitore o fluxo de alunos, captação e evasão com precisão e clareza.
@@ -58,7 +58,7 @@ const Landing = () => {
       </div>
 
       <footer className="mt-24 text-center text-sm text-muted-foreground animate-in fade-in duration-1000 delay-500">
-        <p className="font-medium">&copy; {new Date().getFullYear()} Olinda InsightFlow • UNINASSAU</p>
+        <p className="font-medium">&copy; {new Date().getFullYear()} Análises UNINASSAU</p>
         <p className="mt-2 flex items-center justify-center gap-2">
           <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
           Powered by Edgar Tavares

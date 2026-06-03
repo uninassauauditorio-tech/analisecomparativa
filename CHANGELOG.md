@@ -1,4 +1,4 @@
-# 📓 Cadastro de Mudanças e Evolução do Sistema - Olinda InsightFlow
+# 📓 Cadastro de Mudanças e Evolução do Sistema - Análises UNINASSAU
 
 Este documento registra as principais atualizações, correções e novas funcionalidades implementadas no sistema para garantir a transparência e facilitar manutenções futuras.
 
@@ -14,7 +14,7 @@ Este documento registra as principais atualizações, correções e novas funcio
 ### 2. Acesso Universal e Navegação
 - **Fim das Restrições:** Removida a lógica de "Acesso Restrito". Agora todos os usuários logados têm acesso visual a todas as unidades cadastradas.
 - **Dashboard Direto:** Eliminada a tela de "Boas-vindas". O sistema agora entra diretamente no Dashboard da unidade padrão.
-- **Unidade Padrão Fixada:** Configurado o sistema para iniciar automaticamente na unidade **"UNINASSAU OLINDA"** (ID: `2caba488-fb2f-430c-a774-c016afff04f2`), onde residem os mais de 75.000 registros históricos.
+- **Unidade Padrão Fixada:** Configurado o sistema para iniciar automaticamente na unidade padrão (ID: `2caba488-fb2f-430c-a774-c016afff04f2`), onde residem os mais de 75.000 registros históricos.
 
 ### 3. Gestão de Unidades (Nova Funcionalidade)
 - **Cadastro de Unidades:** Adicionado o componente `AddUnitDialog.tsx` e um botão de **"+"** no Header. 

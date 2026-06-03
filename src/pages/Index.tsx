@@ -7,12 +7,13 @@ import ComparativeChart from "@/components/charts/ComparativeChart";
 import DistributionChart from "@/components/charts/DistributionChart";
 import CourseDistributionChart from "@/components/charts/CourseDistributionChart";
 import PeriodDistributionChart from "@/components/charts/PeriodDistributionChart";
+
 import TemporalComparisonTable from "@/components/TemporalComparisonTable";
 import TopFilters from "@/components/TopFilters";
 import InsightsPanel from "@/components/InsightsPanel";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import RankingsSection from "@/components/RankingsSection";
-import { Users, TrendingUp, UserPlus, UserX, Database } from "lucide-react";
+import { Users, TrendingUp, UserPlus, UserX, Database, Building2, ArrowRight } from "lucide-react";
 import { Filters, CalculatedKPIData, DynamicInsight } from "@/types";
 import { calculateKPIs, getEvolutionData, getComparativeData, getDistributionData, generateDynamicInsights, getCourseDistributionData, getTopMatriculationDates, getPeriodDistributionData, filterRecords } from "@/utils/excelProcessor";
 import { toast } from "sonner";
@@ -83,7 +84,7 @@ const Index = () => {
 
   const kpiData: CalculatedKPIData | null = useMemo(() => {
     if (!processedData || !semesterForAnalysis) return null;
-    return calculateKPIs(processedData.records, processedData.currentSemester, filters);
+    return calculateKPIs(processedData.records, semesterForAnalysis, filters);
   }, [processedData, filters, semesterForAnalysis]);
 
   const evolutionData = useMemo(() => {
@@ -127,6 +128,7 @@ const Index = () => {
     return getCourseDistributionData(processedData.records, filters, semesterForAnalysis);
   }, [processedData, filters, semesterForAnalysis]);
 
+
   const periodDistributionData = useMemo(() => {
     if (!processedData || !semesterForAnalysis) return [];
     return getPeriodDistributionData(processedData.records, filters, semesterForAnalysis);
@@ -167,7 +169,11 @@ const Index = () => {
 
   const statusDescription = useMemo(() => {
     if (filters.status && filters.status !== 'all') {
-      return `Status: ${filters.status}`;
+      const selected = filters.status.split(',');
+      if (selected.length > 2) {
+        return `Status: ${selected.length} selecionados`;
+      }
+      return `Status: ${selected.join(', ')}`;
     }
     return `Todos os Status`;
   }, [filters.status]);
@@ -220,13 +226,37 @@ const Index = () => {
               </div>
 
               {!processedData ? (
-                <div className="flex flex-col items-center justify-center p-16 bg-white/50 border-2 border-dashed border-[#003366]/10 rounded-3xl">
-                  <Database className="h-16 w-16 text-[#003366]/20 mb-4" />
-                  <h3 className="text-xl font-bold text-[#003366]">Unidade sem Dados</h3>
-                  <p className="text-muted-foreground text-center max-w-xs mb-8">
-                    Esta unidade ainda não possui registros no sistema. Utilize o botão "Importar Planilha" no topo para começar.
-                  </p>
-                </div>
+                !profile?.current_unidade_id ? (
+                  // Nenhuma unidade selecionada — pede ao usuário para escolher
+                  <div className="flex flex-col items-center justify-center py-24 px-8">
+                    <div className="relative mb-8">
+                      <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#003366]/10 to-[#003366]/20 flex items-center justify-center shadow-inner">
+                        <Building2 className="h-12 w-12 text-[#003366]/50" />
+                      </div>
+                      <span className="absolute -top-1 -right-1 flex h-5 w-5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#003366] opacity-30"></span>
+                        <span className="relative inline-flex rounded-full h-5 w-5 bg-[#003366]/60"></span>
+                      </span>
+                    </div>
+                    <h3 className="text-2xl font-bold text-[#003366] mb-3">Selecione uma Unidade</h3>
+                    <p className="text-muted-foreground text-center max-w-sm mb-8 leading-relaxed">
+                      Para visualizar o dashboard, selecione uma <strong>unidade</strong> no menu do cabeçalho acima. Os dados serão carregados automaticamente.
+                    </p>
+                    <div className="flex items-center gap-3 px-5 py-3 bg-[#003366]/5 border border-[#003366]/15 rounded-2xl text-sm text-[#003366]/70">
+                      <ArrowRight className="h-4 w-4 text-[#003366] shrink-0 -rotate-90" />
+                      <span>Clique no nome da unidade no topo da página</span>
+                    </div>
+                  </div>
+                ) : (
+                  // Unidade selecionada mas sem dados ainda
+                  <div className="flex flex-col items-center justify-center p-16 bg-white/50 border-2 border-dashed border-[#003366]/10 rounded-3xl">
+                    <Database className="h-16 w-16 text-[#003366]/20 mb-4" />
+                    <h3 className="text-xl font-bold text-[#003366]">Unidade sem Dados</h3>
+                    <p className="text-muted-foreground text-center max-w-xs mb-8">
+                      Esta unidade ainda não possui registros no sistema. Utilize o botão "Importar Planilha" no topo para começar.
+                    </p>
+                  </div>
+                )
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <KPICard
@@ -301,6 +331,7 @@ const Index = () => {
                 <section id="distribuicao-cursos">
                   <CourseDistributionChart data={courseDistributionData} filialName={processedData.filialName} />
                 </section>
+
 
                 {/* 
                 <section id="rankings">

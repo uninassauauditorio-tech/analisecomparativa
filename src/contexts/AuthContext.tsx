@@ -39,7 +39,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Busca unidades e o perfil
         const { data: units } = await supabase.from('unidades').select('*').order('nome');
         const unitsList = units || [];
-        const olindaID = "2caba488-fb2f-430c-a774-c016afff04f2";
 
         const { data: pData } = await supabase
           .from('profiles')
@@ -56,7 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setProfile({
             ...pData,
             unidades_ids: unitsList.map(u => u.id),
-            current_unidade_id: pData.unidade_id || olindaID
+            current_unidade_id: pData.unidade_id || null
           } as Profile);
         }
       } catch (e) {

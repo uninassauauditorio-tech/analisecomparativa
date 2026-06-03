@@ -1,4 +1,4 @@
-# AI Development Rules for InsightFlow
+# AI Development Rules for Análises UNINASSAU
 
 This document outlines the technical stack and provides strict guidelines for the AI assistant to follow when developing and modifying this application. The goal is to ensure consistency, maintainability, and adherence to best practices.
 

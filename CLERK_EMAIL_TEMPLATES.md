@@ -1,4 +1,4 @@
-# 📧 Modelos de E-mail Clerk - Olinda InsightFlow
+# 📧 Modelos de E-mail Clerk - Análises UNINASSAU
 
 Para aplicar estes estilos e traduções, você deve acessar o seu **[Painel do Clerk](https://dashboard.clerk.com/)**, ir em **Customization > Emails** e colar os códigos abaixo nos campos correspondentes.
 
@@ -14,7 +14,7 @@ Use estas cores para manter a identidade visual:
 ---
 
 ## 1. Código de Verificação (OTP)
-**Assunto:** `{{code}} é o seu código de verificação para Olinda InsightFlow`
+**Assunto:** `{{code}} é o seu código de verificação para Análises UNINASSAU`
 
 ### 📝 Template HTML:
 ```html
@@ -37,14 +37,14 @@ Use estas cores para manter a identidade visual:
     <div class="card">
       <div class="title">Verifique seu acesso</div>
       <p class="text">Olá!</p>
-      <p class="text">Para concluir seu login ou cadastro no <strong>Olinda InsightFlow</strong>, utilize o código de segurança abaixo:</p>
+      <p class="text">Para concluir seu login ou cadastro no <strong>Análises UNINASSAU</strong>, utilize o código de segurança abaixo:</p>
       <div class="code-container">
         <h1 class="code">{{code}}</h1>
       </div>
       <p class="text">Este código expira em breve. Se você não solicitou este acesso, pode ignorar este e-mail com segurança.</p>
     </div>
     <div class="footer">
-      © 2026 UNINASSAU - Olinda InsightFlow<br>
+      © 2026 UNINASSAU - Análises UNINASSAU<br>
       Sistema de Inteligência e Captação
     </div>
   </div>
@@ -55,7 +55,7 @@ Use estas cores para manter a identidade visual:
 ---
 
 ## 2. Redefinição de Senha
-**Assunto:** `Redefina sua senha - Olinda InsightFlow`
+**Assunto:** `Redefina sua senha - Análises UNINASSAU`
 
 ### 📝 Template HTML:
 ```html
@@ -76,7 +76,7 @@ Use estas cores para manter a identidade visual:
   <div class="container">
     <div class="card">
       <div class="title">Esqueceu sua senha?</div>
-      <p class="text">Recebemos uma solicitação para redefinir a senha da sua conta no <strong>Olinda InsightFlow</strong>.</p>
+      <p class="text">Recebemos uma solicitação para redefinir a senha da sua conta no <strong>Análises UNINASSAU</strong>.</p>
       <p class="text">Clique no botão abaixo para escolher uma nova senha:</p>
       <div class="btn-container">
         <a href="{{link}}" class="button">Redefinir Senha</a>
@@ -84,7 +84,7 @@ Use estas cores para manter a identidade visual:
       <p class="text" style="font-size: 13px;">Se o botão não funcionar, copie e cole o link abaixo no seu navegador:<br>{{link}}</p>
     </div>
     <div class="footer">
-      © 2026 UNINASSAU - Olinda InsightFlow<br>
+      © 2026 UNINASSAU - Análises UNINASSAU<br>
       Se você não solicitou isso, ignore este e-mail.
     </div>
   </div>
@@ -95,7 +95,7 @@ Use estas cores para manter a identidade visual:
 ---
 
 ## 3. Convite para Novo Usuário
-**Assunto:** `Você foi convidado para o Olinda InsightFlow`
+**Assunto:** `Você foi convidado para o Análises UNINASSAU`
 
 ### 📝 Template HTML:
 ```html
@@ -112,7 +112,7 @@ Use estas cores para manter a identidade visual:
     <div class="card">
       <div class="title">Bem-vindo ao Time!</div>
       <p class="text">Olá!</p>
-      <p class="text">Você acaba de ser convidado por <strong>EDGAR</strong> para acessar o painel de inteligência <strong>Olinda InsightFlow</strong>.</p>
+      <p class="text">Você acaba de ser convidado por <strong>EDGAR</strong> para acessar o painel de inteligência <strong>Análises UNINASSAU</strong>.</p>
       <p class="text">Clique no botão abaixo para ativar sua conta e começar:</p>
       <div class="btn-container">
         <a href="{{link}}" class="button">Aceitar Convite</a>

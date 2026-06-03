@@ -1,6 +1,6 @@
-# Arquivo de Projeto: Olinda InsightFlow
+# Arquivo de Projeto: Análises UNINASSAU
 
-Este documento serve como a "memória" técnica e funcional do projeto Olinda InsightFlow (UNINASSAU). Ele resume a arquitetura, as funcionalidades principais e todas as decisões técnicas tomadas até fevereiro de 2026.
+Este documento serve como a "memória" técnica e funcional do projeto Análises UNINASSAU. Ele resume a arquitetura, as funcionalidades principais e todas as decisões técnicas tomadas até fevereiro de 2026.
 
 ## 🏗️ Arquitetura Técnica
 
